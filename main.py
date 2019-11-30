@@ -30,6 +30,9 @@ os.environ['TFHUB_CACHE_DIR'] = os.path.join(APP_ROOT, 'tf_cache')
 # defines UPLOAD_FOLDER in the appliction's configuration map
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 # This function loads and prepares an image for style transfer.
 # This function load an image and limit its maximum dimension to 512 pixels.
 # It takes path to the image as an argument.
