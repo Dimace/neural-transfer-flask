@@ -2,6 +2,7 @@
 # Importing all needed modules for backend and image processing
 # To run the application just navigate to the project's direcory and enter:
 # python3 main.py
+# Use TABS - size 4 space symbols bitch!
 import os
 from flask import Flask, flash, request, redirect, url_for, send_from_directory, make_response, jsonify
 from werkzeug.utils import secure_filename
@@ -37,78 +38,49 @@ if not os.path.exists(UPLOAD_FOLDER):
 # This function load an image and limit its maximum dimension to 512 pixels.
 # It takes path to the image as an argument.
 def load_img(path_to_img):
-
-    max_dim = 512
-
-    # reads file by path
-    img = tf.io.read_file(path_to_img)
-
-		# decodes an image into 3 channels. Returnds a 3-D tensor of type uint8
-    img = tf.image.decode_image(img, channels=3)
-
-		# converts the acquired tensor into a tensor of type float32 
-    img = tf.image.convert_image_dtype(img, tf.float32)
-
-		# shape variable gets size of 2-D image
-    shape = tf.cast(tf.shape(img)[:-1], tf.float32)
-
-		# long_dim variable gets the longest dimension of the 2-D shape
-    long_dim = max(shape)
-
-		# gets scale coefficient
-    scale = max_dim / long_dim
-
-    new_shape = tf.cast(shape * scale, tf.int32)
-
-    img = tf.image.resize(img, new_shape)
-		# adds a batch dimension to the image tensor. It is need only for convolutional networks
-		# Basically batch dimension contains instances to work with.
-		img = img[tf.newaxis, :]
-    return img
+	max_dim = 512
+	img = tf.io.read_file(path_to_img)
+	img = tf.image.decode_image(img, channels=3)
+	img = tf.image.convert_image_dtype(img, tf.float32)
+	shape = tf.cast(tf.shape(img)[:-1], tf.float32)
+	long_dim = max(shape)
+	scale = max_dim / long_dim
+	new_shape = tf.cast(shape * scale, tf.int32)
+	img = tf.image.resize(img, new_shape)
+	img = img[tf.newaxis, :]
+	return img
 
 # This function transfers style from one image to another and saves a result image to a specified directory.
 # The function returns a name of the saved image.
 # It takes paths of an original image and an image for stylization (path_original_image, path_style_image), 
 # then it saves result by path_to_save
 def stylizeImage(path_original_image, path_style_image, path_to_save):
-
-		# hub_module gets a tensorfow model for style transfer, which is loaded from tensorflow hub
-		hub_module = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
-
-		# loading original and stylization images
-    original_image = load_img(path_original_image)
-    style_image = load_img(path_style_image)
-
-		# stylized_image gets a resulting image from the loaded model
-    stylized_image = hub_module(tf.constant(original_image), tf.constant(style_image))[0]
-    im = tensor_to_image(stylized_image)
-
-    print("All done! Saving result as stylized.jpeg")
-    print('path to save directory' + path_to_save)
-
-    index = random.randint(1, 10000)
-		# In this application I didn't use any DB.
-		# I needed to avoid getting cached images in my application when it gets images by the same name.
-		# In addition, I wanted to see all my previous results.
-		# So I decided to save images by a name "stylized + random number"
-    filename = "stylized" + str(index) + ".jpeg"
-    im.save(path_to_save + '/' + filename, "JPEG")
-    return filename
+	hub_module = hub.load('https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2')
+	original_image = load_img(path_original_image)
+	style_image = load_img(path_style_image)
+	stylized_image = hub_module(tf.constant(original_image), tf.constant(style_image))[0]
+	im = tensor_to_image(stylized_image)
+	print("All done! Saving result as stylized.jpeg")
+	print('path to save directory' + path_to_save)
+	index = random.randint(1, 10000)
+	filename = "stylized" + str(index) + ".jpeg"
+	im.save(path_to_save + '/' + filename, "JPEG")
+	return filename
 
 # This function turns an input tensor of float type into an image.
 # It takes a tensor as an argument.
 def tensor_to_image(tensor):
 	# multiplies elements of tensor by 255
-  tensor = tensor*255
+	tensor = tensor*255
 
 	# converts the tensor to uint8 type to make an image from it.
-  tensor = np.array(tensor, dtype=np.uint8)
+	tensor = np.array(tensor, dtype=np.uint8)
 
 	# error handler
-  if np.ndim(tensor)>3:
-    assert tensor.shape[0] == 1
-    tensor = tensor[0]
-  return PIL.Image.fromarray(tensor)
+	if np.ndim(tensor)>3:
+		assert tensor.shape[0] == 1
+		tensor = tensor[0]
+	return PIL.Image.fromarray(tensor)
 
 
 # This section contains all request handlers. Basically it is a part of web server functionality.
